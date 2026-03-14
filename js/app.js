@@ -349,13 +349,19 @@ class GoogleLensTableScanner {
             });
         };
         
-        // Method 2: Fallback to web version
+        // Method 2: Direct website link (always works)
+        const openDirectWebsite = () => {
+            window.open('https://lens.google.com', '_blank');
+            this.showToast('🌐 Opening Google Lens website...', 'info', 3000);
+        };
+        
+        // Method 3: Fallback to web version
         const openWebVersion = () => {
             window.open('https://lens.google.com', '_blank');
             this.showToast('Opening Google Lens in browser...', 'info', 3000);
         };
         
-        // Method 3: Show user manual instructions with buttons
+        // Method 4: Show user manual instructions with buttons
         const showManualInstructions = () => {
             // Create a custom dialog
             const dialog = document.createElement('div');
@@ -389,24 +395,23 @@ class GoogleLensTableScanner {
                     </p>
                     
                     <div style="display: flex; flex-direction: column; gap: 12px;">
-                        <button id="lensAppBtn" style="
+                        <a href="https://lens.google.com" target="_blank" style="
                             background: #4285F4;
                             color: white;
-                            border: none;
+                            text-decoration: none;
                             padding: 15px 20px;
                             border-radius: 12px;
                             font-size: 16px;
                             font-weight: 600;
-                            cursor: pointer;
                             display: flex;
                             align-items: center;
                             justify-content: center;
                             gap: 10px;
                         ">
-                            <span>📱</span> Open Lens App
-                        </button>
+                            <span>🌐</span> Open Lens Website (Always Works)
+                        </a>
                         
-                        <button id="lensWebBtn" style="
+                        <button id="lensAppBtn" style="
                             background: #34A853;
                             color: white;
                             border: none;
@@ -420,7 +425,7 @@ class GoogleLensTableScanner {
                             justify-content: center;
                             gap: 10px;
                         ">
-                            <span>🌐</span> Open Web Version
+                            <span>📱</span> Open Lens App
                         </button>
                         
                         <button id="lensManualBtn" style="
@@ -485,16 +490,11 @@ class GoogleLensTableScanner {
                 openApp().then((opened) => {
                     this.hideLoading();
                     if (!opened) {
-                        this.showToast('Could not open app. Try web version.', 'warning');
+                        this.showToast('Could not open app. Try website link.', 'warning');
                     } else {
                         this.showToast('Google Lens opened! Copy text and paste back', 'success', 4000);
                     }
                 });
-            });
-            
-            document.getElementById('lensWebBtn').addEventListener('click', () => {
-                document.body.removeChild(dialog);
-                openWebVersion();
             });
             
             document.getElementById('lensManualBtn').addEventListener('click', () => {
@@ -507,15 +507,8 @@ class GoogleLensTableScanner {
             });
         };
         
-        // Try to open app first, if fails show manual options
-        openApp().then((opened) => {
-            this.hideLoading();
-            if (!opened) {
-                showManualInstructions();
-            } else {
-                this.showToast('Google Lens opened! Copy text and paste back', 'success', 4000);
-            }
-        });
+        // First, show the dialog with direct website link as the primary option
+        showManualInstructions();
     }
 
     /**
@@ -524,7 +517,7 @@ class GoogleLensTableScanner {
     openGoogleLensIOS() {
         this.hideLoading();
         
-        // iOS doesn't support direct app intents, so we'll show options
+        // iOS doesn't support direct app intents, so we'll show options with direct website link
         const dialog = document.createElement('div');
         dialog.style.cssText = `
             position: fixed;
@@ -551,34 +544,28 @@ class GoogleLensTableScanner {
                 <div style="font-size: 48px; margin-bottom: 20px;">📱</div>
                 <h2 style="color: #333; margin-bottom: 15px;">Google Lens on iOS</h2>
                 <p style="color: #666; margin-bottom: 25px;">
-                    Google Lens is built into the iOS Camera app. Here's how to use it:
+                    Choose how you want to use Google Lens:
                 </p>
                 
-                <div style="text-align: left; margin-bottom: 25px;">
-                    <div style="margin: 15px 0; padding: 10px; background: #f0f7ff; border-radius: 10px;">
-                        <strong style="color: #4285F4; display: block; margin-bottom: 5px;">📸 Step 1:</strong>
-                        <p style="color: #666;">Open Camera app → Point at table</p>
-                    </div>
-                    
-                    <div style="margin: 15px 0; padding: 10px; background: #f0f7ff; border-radius: 10px;">
-                        <strong style="color: #34A853; display: block; margin-bottom: 5px;">🔍 Step 2:</strong>
-                        <p style="color: #666;">Tap the "Scan Text" icon (📄) that appears</p>
-                    </div>
-                    
-                    <div style="margin: 15px 0; padding: 10px; background: #f0f7ff; border-radius: 10px;">
-                        <strong style="color: #FBBC05; display: block; margin-bottom: 5px;">📋 Step 3:</strong>
-                        <p style="color: #666;">Select all text → Tap "Copy"</p>
-                    </div>
-                    
-                    <div style="margin: 15px 0; padding: 10px; background: #f0f7ff; border-radius: 10px;">
-                        <strong style="color: #EA4335; display: block; margin-bottom: 5px;">⬇️ Step 4:</strong>
-                        <p style="color: #666;">Come back here and paste</p>
-                    </div>
-                </div>
-                
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <button id="lensOpenCamera" style="
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px;">
+                    <a href="https://lens.google.com" target="_blank" style="
                         background: #4285F4;
+                        color: white;
+                        text-decoration: none;
+                        padding: 15px 20px;
+                        border-radius: 12px;
+                        font-size: 16px;
+                        font-weight: 600;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 10px;
+                    ">
+                        <span>🌐</span> Open Lens Website (Always Works)
+                    </a>
+                    
+                    <button id="lensOpenCamera" style="
+                        background: #34A853;
                         color: white;
                         border: none;
                         padding: 15px;
@@ -587,21 +574,45 @@ class GoogleLensTableScanner {
                         font-weight: 600;
                         cursor: pointer;
                     ">
-                        📷 Open Camera
-                    </button>
-                    
-                    <button id="lensCloseBtn" style="
-                        background: #f0f0f0;
-                        color: #666;
-                        border: none;
-                        padding: 12px;
-                        border-radius: 12px;
-                        font-size: 14px;
-                        cursor: pointer;
-                    ">
-                        Close
+                        📷 Use Camera App
                     </button>
                 </div>
+                
+                <div style="text-align: left; margin-bottom: 25px;">
+                    <h3 style="color: #333; margin-bottom: 10px;">Camera App Method:</h3>
+                    <div style="margin: 10px 0; padding: 10px; background: #f0f7ff; border-radius: 10px;">
+                        <strong style="color: #4285F4; display: block; margin-bottom: 5px;">📸 Step 1:</strong>
+                        <p style="color: #666;">Open Camera app → Point at table</p>
+                    </div>
+                    
+                    <div style="margin: 10px 0; padding: 10px; background: #f0f7ff; border-radius: 10px;">
+                        <strong style="color: #34A853; display: block; margin-bottom: 5px;">🔍 Step 2:</strong>
+                        <p style="color: #666;">Tap the "Scan Text" icon (📄) that appears</p>
+                    </div>
+                    
+                    <div style="margin: 10px 0; padding: 10px; background: #f0f7ff; border-radius: 10px;">
+                        <strong style="color: #FBBC05; display: block; margin-bottom: 5px;">📋 Step 3:</strong>
+                        <p style="color: #666;">Select all text → Tap "Copy"</p>
+                    </div>
+                    
+                    <div style="margin: 10px 0; padding: 10px; background: #f0f7ff; border-radius: 10px;">
+                        <strong style="color: #EA4335; display: block; margin-bottom: 5px;">⬇️ Step 4:</strong>
+                        <p style="color: #666;">Come back here and paste</p>
+                    </div>
+                </div>
+                
+                <button id="lensCloseBtn" style="
+                    background: #f0f0f0;
+                    color: #666;
+                    border: none;
+                    padding: 12px;
+                    border-radius: 12px;
+                    font-size: 14px;
+                    cursor: pointer;
+                    width: 100%;
+                ">
+                    Close
+                </button>
             </div>
         `;
         
@@ -662,10 +673,10 @@ class GoogleLensTableScanner {
                 max-width: 350px;
                 text-align: center;
             ">
-                <h2 style="color: #333; margin-bottom: 20px;">🔍 Google Lens Links</h2>
+                <h2 style="color: #333; margin-bottom: 20px;">🔍 Google Lens</h2>
                 
                 <p style="color: #666; margin-bottom: 20px;">
-                    Tap any link below to open Google Lens:
+                    Tap the link below to open Google Lens:
                 </p>
                 
                 <div style="display: flex; flex-direction: column; gap: 15px;">
@@ -676,19 +687,28 @@ class GoogleLensTableScanner {
                         padding: 15px;
                         border-radius: 12px;
                         font-weight: 600;
+                        font-size: 18px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 10px;
                     ">
-                        🌐 Open in Browser
+                        <span>🌐</span> Open Google Lens Website
                     </a>
                     
-                    <a href="google://lens" style="
+                    <a href="https://lens.google.com/search?p=" target="_blank" style="
                         background: #34A853;
                         color: white;
                         text-decoration: none;
                         padding: 15px;
                         border-radius: 12px;
                         font-weight: 600;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 10px;
                     ">
-                        📱 Open in App (Android)
+                        <span>🔍</span> Direct Lens Search
                     </a>
                     
                     <button onclick="this.parentElement.parentElement.parentElement.remove()" style="
@@ -699,13 +719,17 @@ class GoogleLensTableScanner {
                         border-radius: 12px;
                         margin-top: 10px;
                         cursor: pointer;
+                        font-size: 16px;
                     ">
                         Close
                     </button>
                 </div>
                 
-                <p style="color: #999; margin-top: 20px; font-size: 12px;">
+                <p style="color: #999; margin-top: 20px; font-size: 14px;">
                     After scanning, copy the text and paste back here
+                </p>
+                <p style="color: #4285F4; margin-top: 10px; font-size: 13px;">
+                    💡 Tip: On iPhone, use the Camera app's text scanner
                 </p>
             </div>
         `;
@@ -1575,6 +1599,12 @@ Column 1  Column 2  Column 3
                     <li>Use grid paper for better results</li>
                     <li>Ensure good lighting</li>
                     <li>Hold camera steady</li>
+                </ul>
+                
+                <h4>🔗 Direct Links:</h4>
+                <ul>
+                    <li><a href="https://lens.google.com" target="_blank">Open Google Lens Website</a></li>
+                    <li><a href="https://lens.google.com/search?p=" target="_blank">Direct Lens Search</a></li>
                 </ul>
             </div>
         `;
