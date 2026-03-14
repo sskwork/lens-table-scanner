@@ -205,7 +205,7 @@ class GoogleLensTableScanner {
             hasCamera: !!(navigator.mediaDevices && navigator.mediaDevices.enumerateDevices)
         };
 
-        // Just log device info, no toasts
+        // Just log device info
         console.log('Device detected:', this.deviceInfo);
     }
 
@@ -269,89 +269,20 @@ class GoogleLensTableScanner {
     }
 
     /**
-     * Open Google Lens - DIRECT CAMERA LAUNCH
-     * Opens Google Lens directly to camera interface with maximum reliability
-     * NO DIALOGS, NO POPUPS, NO INSTRUCTIONS - JUST OPENS THE APP
+     * Open Google Lens - DIRECT BROWSER VERSION
+     * Opens Google Lens website in browser (works on all devices)
      */
     openGoogleLens() {
-        this.showLoading('Opening Google Lens camera...');
+        this.showLoading('Opening Google Lens in browser...');
         
         setTimeout(() => {
             this.hideLoading();
             
-            if (this.deviceInfo.isAndroid) {
-                // DIRECT ANDROID INTENT - Opens Google Lens camera directly
-                const lensPackage = 'com.google.android.apps.lens';
-                
-                // Multiple intent formats for maximum compatibility
-                const intents = [
-                    // Most direct - opens camera immediately (THIS IS WHAT YOU WANT)
-                    `intent://lens/#Intent;scheme=google;package=${lensPackage};end;`,
-                    
-                    // Alternative with scan action
-                    `intent://scan/#Intent;scheme=google;package=${lensPackage};end;`,
-                    
-                    // Web intent as fallback
-                    `intent://lens.google.com/#Intent;scheme=https;package=${lensPackage};end;`,
-                    
-                    // Direct scheme
-                    'google://lens',
-                    
-                    // Market link if not installed
-                    `market://details?id=${lensPackage}`
-                ];
-                
-                // Try each intent with a small delay
-                intents.forEach((intent, index) => {
-                    setTimeout(() => {
-                        try {
-                            // Create invisible iframe for each intent
-                            const iframe = document.createElement('iframe');
-                            iframe.style.display = 'none';
-                            iframe.src = intent;
-                            document.body.appendChild(iframe);
-                            
-                            // Remove iframe after attempt
-                            setTimeout(() => {
-                                if (iframe.parentNode) {
-                                    document.body.removeChild(iframe);
-                                }
-                            }, 500);
-                        } catch (e) {
-                            console.log(`Intent ${index} failed:`, e);
-                        }
-                    }, index * 100);
-                });
-                
-                // Also try direct window location for the first intent
-                setTimeout(() => {
-                    window.location.href = intents[0];
-                }, 50);
-                
-                // Just show a simple toast, no instructions
-                this.showToast('📸 Opening Google Lens...', 'success', 1500);
-                
-            } else if (this.deviceInfo.isIOS) {
-                // iOS: Try to open Google Lens in Google app
-                const iosIntents = [
-                    'google://lens',
-                    'googlegoggle://lens',
-                    'https://lens.google.com'
-                ];
-                
-                iosIntents.forEach((intent, index) => {
-                    setTimeout(() => {
-                        window.location.href = intent;
-                    }, index * 200);
-                });
-                
-                this.showToast('📱 Opening Google Lens...', 'info', 1500);
-                
-            } else {
-                // Desktop
-                window.open('https://lens.google.com', '_blank');
-                this.showToast('📸 Opening Google Lens...', 'success', 1500);
-            }
+            // DIRECTLY OPEN GOOGLE LENS WEBSITE - WORKS ON ALL DEVICES
+            window.open('https://lens.google.com', '_blank');
+            
+            // Simple instruction toast
+            this.showToast('📸 Scan → Copy text → Paste back here', 'info', 4000);
             
         }, 500);
     }
