@@ -286,6 +286,15 @@ class GoogleLensTableScanner {
         } else {
             this.openGoogleLensDesktop();
         }
+        
+        // Emergency fallback - shows after 3 seconds if nothing else worked
+        setTimeout(() => {
+            // Only show emergency fallback if no other dialog is open and app is still in loading state
+            if (this.isLoading) {
+                this.hideLoading();
+                this.emergencyLensOpen();
+            }
+        }, 3000);
     }
 
     /**
@@ -624,6 +633,84 @@ class GoogleLensTableScanner {
         setTimeout(() => {
             this.showToast('Scan → Copy text → Paste back here', 'info', 5000);
         }, 1000);
+    }
+
+    /**
+     * Emergency fallback - direct links to Google Lens
+     */
+    emergencyLensOpen() {
+        const emergencyDialog = document.createElement('div');
+        emergencyDialog.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+            padding: 20px;
+        `;
+        
+        emergencyDialog.innerHTML = `
+            <div style="
+                background: white;
+                border-radius: 20px;
+                padding: 30px;
+                max-width: 350px;
+                text-align: center;
+            ">
+                <h2 style="color: #333; margin-bottom: 20px;">🔍 Google Lens Links</h2>
+                
+                <p style="color: #666; margin-bottom: 20px;">
+                    Tap any link below to open Google Lens:
+                </p>
+                
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <a href="https://lens.google.com" target="_blank" style="
+                        background: #4285F4;
+                        color: white;
+                        text-decoration: none;
+                        padding: 15px;
+                        border-radius: 12px;
+                        font-weight: 600;
+                    ">
+                        🌐 Open in Browser
+                    </a>
+                    
+                    <a href="google://lens" style="
+                        background: #34A853;
+                        color: white;
+                        text-decoration: none;
+                        padding: 15px;
+                        border-radius: 12px;
+                        font-weight: 600;
+                    ">
+                        📱 Open in App (Android)
+                    </a>
+                    
+                    <button onclick="this.parentElement.parentElement.parentElement.remove()" style="
+                        background: #f0f0f0;
+                        color: #666;
+                        border: none;
+                        padding: 12px;
+                        border-radius: 12px;
+                        margin-top: 10px;
+                        cursor: pointer;
+                    ">
+                        Close
+                    </button>
+                </div>
+                
+                <p style="color: #999; margin-top: 20px; font-size: 12px;">
+                    After scanning, copy the text and paste back here
+                </p>
+            </div>
+        `;
+        
+        document.body.appendChild(emergencyDialog);
     }
 
     /**
