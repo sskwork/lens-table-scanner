@@ -1271,3 +1271,16 @@ button,
         display: none;
     }
 }
+/* Custom Dialog Styles */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Add this to your existing keyframes section if not present */
