@@ -205,8 +205,15 @@ class GoogleLensTableScanner {
             hasCamera: !!(navigator.mediaDevices && navigator.mediaDevices.enumerateDevices)
         };
 
-        // Just show device detection without any popups
+        // Log device info for debugging
         console.log('Device detected:', this.deviceInfo);
+        
+        // Show a quick toast based on device
+        if (isAndroid) {
+            this.showToast('📱 Android: Opening Lens app...', 'info', 2000);
+        } else if (isIOS) {
+            this.showToast('📱 iOS: Opening Google app...', 'info', 2000);
+        }
     }
 
     /**
@@ -269,22 +276,217 @@ class GoogleLensTableScanner {
     }
 
     /**
-     * Open Google Lens - SIMPLE VERSION that works exactly like desktop on all devices
-     * Directly opens https://lens.google.com in a new tab/window
+     * Open Google Lens - DIRECT APP LAUNCH with camera ready
+     * Opens the actual Google Lens app, not just the website
      */
     openGoogleLens() {
         this.showLoading('Opening Google Lens...');
         
-        // Use setTimeout to ensure loading message is shown
+        // Hide loading after a moment
         setTimeout(() => {
-            // Directly open Google Lens website - works on ALL devices (desktop, Android, iOS)
-            window.open('https://lens.google.com', '_blank');
-            
             this.hideLoading();
+        }, 1000);
+        
+        // Different approaches for different devices
+        if (this.deviceInfo.isAndroid) {
+            // ANDROID: Use intent to open Google Lens app directly
+            this.openGoogleLensAppAndroid();
+        } else if (this.deviceInfo.isIOS) {
+            // IOS: Use URL scheme to open Google Lens in Google app
+            this.openGoogleLensAppIOS();
+        } else {
+            // DESKTOP: Fallback to website
+            window.open('https://lens.google.com', '_blank');
+            this.showToast('Google Lens opened in browser', 'info', 3000);
+        }
+    }
+
+    /**
+     * Open Google Lens app on Android (direct camera launch)
+     */
+    openGoogleLensAppAndroid() {
+        // Method 1: Direct intent to open Google Lens app with camera
+        const lensIntents = [
+            // Primary intent - opens Lens app directly to camera
+            'intent://lens/#Intent;scheme=google;package=com.google.android.apps.lens;end;',
             
-            // Simple instruction toast
-            this.showToast('📸 Scan table → Copy text → Paste back here', 'info', 5000);
-        }, 500);
+            // Alternative intent with different format
+            'intent://scan/#Intent;scheme=google;package=com.google.android.apps.lens;end;',
+            
+            // Google Lens intent from Google app
+            'google://lens',
+            
+            // Fallback to Google app's Lens feature
+            'intent://www.google.com/lens#Intent;scheme=https;package=com.google.android.apps.lens;end;',
+            
+            // Last resort - try to open Google app's Lens
+            'google://app?lens'
+        ];
+        
+        // Try each intent until one works
+        let intentAttempted = false;
+        
+        const tryIntent = (index) => {
+            if (index >= lensIntents.length) {
+                // If all intents fail, show helpful message
+                this.showLensInstructions();
+                return;
+            }
+            
+            try {
+                // Create a temporary iframe to trigger the intent
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = lensIntents[index];
+                
+                // Set up timeout to detect if intent failed
+                const timeout = setTimeout(() => {
+                    if (iframe.parentNode) {
+                        document.body.removeChild(iframe);
+                    }
+                    // Try next intent
+                    tryIntent(index + 1);
+                }, 800);
+                
+                iframe.onload = () => {
+                    clearTimeout(timeout);
+                    intentAttempted = true;
+                    setTimeout(() => {
+                        if (iframe.parentNode) {
+                            document.body.removeChild(iframe);
+                        }
+                    }, 100);
+                };
+                
+                document.body.appendChild(iframe);
+                
+                // Also try direct window location as backup
+                if (index === 0) {
+                    setTimeout(() => {
+                        if (!intentAttempted) {
+                            window.location.href = lensIntents[index];
+                        }
+                    }, 100);
+                }
+                
+            } catch (e) {
+                console.log('Intent failed:', e);
+                tryIntent(index + 1);
+            }
+        };
+        
+        // Start trying intents
+        tryIntent(0);
+        
+        // Show instruction toast
+        this.showToast('📸 Google Lens should open with camera', 'info', 4000);
+    }
+
+    /**
+     * Show manual instructions if app doesn't open
+     */
+    showLensInstructions() {
+        const instructions = `
+            📱 To open Google Lens manually:
+            
+            1. Find Google Lens app on your phone
+            2. OR open Google app and tap the Lens icon (camera)
+            3. OR go to: Settings → Google → Lens
+            
+            After scanning, copy text and paste back here.
+        `;
+        
+        // Create a simple dialog
+        const dialog = document.createElement('div');
+        dialog.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+        `;
+        
+        dialog.innerHTML = `
+            <div style="
+                background: white;
+                border-radius: 20px;
+                padding: 25px;
+                max-width: 350px;
+            ">
+                <h3 style="color: #333; margin-bottom: 15px;">🔍 Open Google Lens</h3>
+                <div style="color: #666; line-height: 1.6; margin-bottom: 20px; white-space: pre-line;">
+                    ${instructions}
+                </div>
+                <button onclick="this.parentElement.parentElement.remove()" style="
+                    background: #4285F4;
+                    color: white;
+                    border: none;
+                    padding: 12px 20px;
+                    border-radius: 10px;
+                    width: 100%;
+                    font-size: 16px;
+                    cursor: pointer;
+                ">
+                    Got it
+                </button>
+            </div>
+        `;
+        
+        document.body.appendChild(dialog);
+    }
+
+    /**
+     * Open Google Lens on iOS (via Google app)
+     */
+    openGoogleLensAppIOS() {
+        // iOS doesn't have a standalone Lens app, but Google app has Lens built-in
+        const iosSchemes = [
+            // Try to open Google app with Lens
+            'googlegoggle://lens',
+            'google://lens',
+            // Fallback to Google app
+            'google://',
+            // Last resort - website
+            'https://lens.google.com'
+        ];
+        
+        let schemeAttempted = false;
+        
+        const tryScheme = (index) => {
+            if (index >= iosSchemes.length) {
+                this.showToast('Please open Google app and tap the Lens icon', 'info', 5000);
+                return;
+            }
+            
+            try {
+                const timeout = setTimeout(() => {
+                    tryScheme(index + 1);
+                }, 500);
+                
+                window.location.href = iosSchemes[index];
+                
+                setTimeout(() => {
+                    clearTimeout(timeout);
+                    schemeAttempted = true;
+                }, 100);
+                
+            } catch (e) {
+                tryScheme(index + 1);
+            }
+        };
+        
+        tryScheme(0);
+        
+        // Show iOS-specific instructions
+        setTimeout(() => {
+            this.showToast('📱 On iOS: Open Google app → Tap Lens icon', 'info', 6000);
+        }, 1000);
     }
 
     /**
@@ -1116,10 +1318,10 @@ class GoogleLensTableScanner {
                 <h3>📖 How to Use</h3>
                 
                 <h4>Step 1: Scan with Google Lens</h4>
-                <p>Tap the "Scan with Google Lens" button. This will open Google Lens website.</p>
+                <p>Tap the "Scan with Google Lens" button. This will open the Google Lens app on your device.</p>
                 
                 <h4>Step 2: Capture Table</h4>
-                <p>On the Google Lens website, click the camera icon and point at your handwritten table. Make sure it's well-lit and clearly visible.</p>
+                <p>Point your camera at the handwritten table. Make sure it's well-lit and clearly visible.</p>
                 
                 <h4>Step 3: Select Text</h4>
                 <p>In Google Lens, tap the "Text" tab and select all the text in the table.</p>
