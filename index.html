@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="description" content="Scan handwritten tables using Google Lens and convert to digital format">
+    <meta name="theme-color" content="#4285F4">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Lens Table Scanner">
+    <meta name="format-detection" content="telephone=no">
+    
+    <title>Google Lens Table Scanner</title>
+    
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Preload critical assets -->
+    <link rel="preload" href="css/style.css" as="style">
+    <link rel="preload" href="js/app.js" as="script">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <button class="menu-btn" id="menuBtn" aria-label="Menu">☰</button>
+            </div>
+            <div class="header-center">
+                <span class="logo-text">📸 LensTable</span>
+            </div>
+            <div class="header-right">
+                <span class="google-badge">Google</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent">
+            <!-- Welcome Section -->
+            <section class="welcome-section">
+                <div class="welcome-card">
+                    <div class="google-lens-logo">
+                        <span class="lens-icon">🔍</span>
+                        <span class="lens-text">Google Lens</span>
+                    </div>
+                    <h2 class="welcome-title">Scan Handwritten Tables</h2>
+                    <p class="welcome-description">Use Google Lens to scan tables and paste the results here</p>
+                </div>
+            </section>
+
+            <!-- Quick Stats (hidden initially) -->
+            <div class="stats-card hidden" id="statsCard">
+                <div class="stat-item">
+                    <span class="stat-label">Table Size</span>
+                    <span class="stat-value" id="tableSize">0x0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Total Cells</span>
+                    <span class="stat-value" id="totalCells">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Filled Cells</span>
+                    <span class="stat-value" id="filledCells">0</span>
+                </div>
+            </div>
+
+            <!-- Action Buttons Grid -->
+            <div class="action-grid">
+                <!-- Google Lens Button -->
+                <button class="action-card google-lens-card" id="googleLensBtn">
+                    <div class="card-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="#4285F4">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9h10v2H7z"/>
+                        </svg>
+                    </div>
+                    <div class="card-content">
+                        <h3>Scan with Google Lens</h3>
+                        <p>Open Google Lens app to scan your table</p>
+                    </div>
+                    <div class="card-arrow">→</div>
+                </button>
+
+                <!-- Paste Button -->
+                <button class="action-card paste-card" id="pasteBtn">
+                    <div class="card-icon">📋</div>
+                    <div class="card-content">
+                        <h3>Paste Results</h3>
+                        <p>Copy from Google Lens and paste here</p>
+                    </div>
+                    <div class="card-arrow">→</div>
+                </button>
+            </div>
+
+            <!-- Quick Tips -->
+            <div class="tips-section">
+                <details class="tips-dropdown" open>
+                    <summary class="tips-summary">
+                        <span class="tips-icon">💡</span>
+                        <span class="tips-title">Quick Tips</span>
+                        <span class="tips-toggle">▼</span>
+                    </summary>
+                    <div class="tips-content">
+                        <ol class="tip-list">
+                            <li>Tap "Scan with Google Lens" to open the app</li>
+                            <li>Point camera at your handwritten table</li>
+                            <li>Tap the "Select text" icon (T) in Lens</li>
+                            <li>Select all text and copy it</li>
+                            <li>Come back and tap "Paste Results"</li>
+                            <li>Your table will be formatted automatically!</li>
+                        </ol>
+                        <div class="tip-highlight">
+                            <span class="highlight-icon">✨</span>
+                            <span>Works best with clearly written numbers in grid format</span>
+                        </div>
+                    </div>
+                </details>
+            </div>
+
+            <!-- Table Section -->
+            <section class="table-section hidden" id="tableSection">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <span class="title-icon">📊</span>
+                        Table Data
+                    </h3>
+                    <div class="section-actions">
+                        <button class="icon-btn" id="editTableBtn" title="Edit Table">✏️</button>
+                        <button class="icon-btn" id="refreshTableBtn" title="Refresh">🔄</button>
+                        <button class="icon-btn" id="clearTableBtn" title="Clear All">🗑️</button>
+                    </div>
+                </div>
+
+                <!-- Table Controls -->
+                <div class="table-controls">
+                    <div class="control-group">
+                        <label for="tableRows">Rows:</label>
+                        <input type="number" id="tableRows" min="1" max="20" value="5" class="table-input">
+                    </div>
+                    <div class="control-group">
+                        <label for="tableCols">Columns:</label>
+                        <input type="number" id="tableCols" min="1" max="26" value="5" class="table-input">
+                    </div>
+                    <button class="small-btn" id="resizeTableBtn">Resize</button>
+                </div>
+
+                <!-- Table Container -->
+                <div class="table-container">
+                    <div id="tableView" class="table-responsive"></div>
+                </div>
+
+                <!-- Table Actions -->
+                <div class="table-actions">
+                    <button class="btn secondary-btn" id="processDataBtn">
+                        <span class="btn-icon">🔍</span>
+                        Extract Values
+                    </button>
+                    <button class="btn primary-btn" id="exportExcelBtn">
+                        <span class="btn-icon">📥</span>
+                        Export Excel
+                    </button>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section hidden" id="resultsSection">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <span class="title-icon">📋</span>
+                        Extracted Values
+                    </h3>
+                    <div class="section-actions">
+                        <button class="icon-btn" id="copyResultsBtn" title="Copy All">📋</button>
+                        <button class="icon-btn" id="downloadResultsBtn" title="Download">📥</button>
+                    </div>
+                </div>
+
+                <!-- Results Stats -->
+                <div class="results-stats">
+                    <span class="results-count" id="resultsCount">0 values found</span>
+                </div>
+
+                <!-- Results Grid -->
+                <div id="resultsGrid" class="results-grid"></div>
+            </section>
+
+            <!-- Recent Scans Section -->
+            <section class="history-section hidden" id="historySection">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <span class="title-icon">🕒</span>
+                        Recent Scans
+                    </h3>
+                    <button class="icon-btn" id="clearHistoryBtn" title="Clear History">🗑️</button>
+                </div>
+                <div id="historyList" class="history-list"></div>
+            </section>
+        </main>
+
+        <!-- Paste Modal -->
+        <div class="modal-overlay hidden" id="pasteModal">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3 class="modal-title">📋 Paste Your Data</h3>
+                    <button class="modal-close" id="closePasteModalBtn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p class="modal-instruction">Copy text from Google Lens and paste below:</p>
+                    
+                    <!-- Format Selector -->
+                    <div class="format-selector">
+                        <span class="format-label">Format:</span>
+                        <div class="format-buttons">
+                            <button class="format-btn active" data-format="auto">Auto</button>
+                            <button class="format-btn" data-format="tabs">Tabs</button>
+                            <button class="format-btn" data-format="spaces">Spaces</button>
+                            <button class="format-btn" data-format="commas">Commas</button>
+                        </div>
+                    </div>
+
+                    <!-- Paste Area -->
+                    <textarea class="paste-area" id="pasteArea" placeholder="Paste your copied table data here...
+Example:
+123   456   789
+234   567   890
+345   678   901" spellcheck="false"></textarea>
+
+                    <!-- Preview Section -->
+                    <div class="preview-section hidden" id="previewSection">
+                        <h4 class="preview-title">Preview:</h4>
+                        <div class="preview-content" id="previewContent"></div>
+                    </div>
+
+                    <!-- Sample Data -->
+                    <div class="sample-data">
+                        <p class="sample-title">Need sample data?</p>
+                        <div class="sample-buttons">
+                            <button class="sample-btn" data-sample="numbers">Numbers</button>
+                            <button class="sample-btn" data-sample="products">Products</button>
+                            <button class="sample-btn" data-sample="grades">Grades</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn secondary-btn" id="cancelPasteBtn">Cancel</button>
+                    <button class="btn primary-btn" id="confirmPasteBtn">Process Table</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay hidden" id="loadingOverlay">
+            <div class="loading-spinner"></div>
+            <p class="loading-text" id="loadingText">Processing...</p>
+        </div>
+
+        <!-- Toast Notification -->
+        <div class="toast-notification hidden" id="toast">
+            <span class="toast-icon" id="toastIcon">✅</span>
+            <span class="toast-message" id="toastMessage"></span>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-btn active" data-view="scan" id="navScan">
+                <span class="nav-icon">📸</span>
+                <span class="nav-label">Scan</span>
+            </button>
+            <button class="nav-btn" data-view="table" id="navTable">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">Table</span>
+            </button>
+            <button class="nav-btn" data-view="history" id="navHistory">
+                <span class="nav-icon">🕒</span>
+                <span class="nav-label">History</span>
+            </button>
+            <button class="nav-btn" data-view="help" id="navHelp">
+                <span class="nav-icon">❓</span>
+                <span class="nav-label">Help</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registered');
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+    </script>
+
+    <!-- Main App Script -->
+    <script src="js/app.js"></script>
+</body>
+</html>
